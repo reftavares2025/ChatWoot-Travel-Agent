@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: captur_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: captur_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: captur_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+  evolution-api:
+    image: evoapicloud/evolution-api:latest
+    container_name: captur_evolution
+    environment:
+      - SERVER_URL=http://localhost:8080
+      - DANGEROUS_FUNCTIONS=true
+      - AUTHENTICATION_TYPE=apikey
+      - AUTHENTICATION_API_KEY=captur_secret_key_2026
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://postgres:postgrespassword@postgres:5432/captur_db?schema=public
+      - DATABASE_CONNECTION_CLIENT_NAME=evolution_api
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://redis:6379/1
+      - CACHE_REDIS_PREFIX_KEY=evolution
+      - CACHE_REDIS_SAVE_INSTANCES=true
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - evolution_instances:/evolution/instances
+    restart: always
+
+  chatwoot_web:
+    image: chatwoot/chatwoot:v3.3.1
+    container_name: captur_chatwoot_web
+    env_file: .env.chatwoot
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+    entrypoint: docker/entrypoints/rails.sh
+    command: ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
+    volumes:
+      - chatwoot_storage:/app/storage
+    restart: always
+
+  chatwoot_worker:
+    image: chatwoot/chatwoot:v3.3.1
+    container_name: captur_chatwoot_worker
+    env_file: .env.chatwoot
+    depends_on:
+      - postgres
+      - redis
+    entrypoint: docker/entrypoints/rails.sh
+    command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+    volumes:
+      - chatwoot_storage:/app/storage
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
+  evolution_instances:
+  chatwoot_storage:

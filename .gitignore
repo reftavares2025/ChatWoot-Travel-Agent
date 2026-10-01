@@ -1,0 +1,36 @@
+node_modules/
+dist/
+uploads/
+*.log
+.env
+dev.db
+dev.db-journal
+
+.vercel
+.env*
+!.env.example
+
+# Repositórios git independentes, vendorizados aqui como pastas locais — cada um tem
+# seu próprio remoto e histórico; a raiz não deve tentar engolir nenhum dos dois como
+# submódulo/gitlink quebrado (git avisa "adding embedded git repository" sem isto).
+#   - captur-agência-de-viagens/ -> github.com/reftavares2025/CAPTUR-AGENCIA-DE-VIAGENS
+#   - OpenWA/                    -> clone local do projeto open-source rmyndharis/OpenWA
+captur-agência-de-viagens/
+OpenWA/
+
+# Arquitetura anterior já descartada (prototipo Node/Flutter) — não reflete o sistema real.
+_archive/
+
+# Dados reais de cliente (contratos assinados, certificados, fotos) e documentos internos
+# de negócio — nunca vão pro GitHub, mesmo em repositório privado.
+storage/
+backups_20260921/
+__pycache__/
+*.pyc
+contrato_espanha_paulo_sergio.pdf
+INSTRUÇÕES CAPTUR 26-08.txt
+captur-deploy.md
+index.md
+log.md
+*.sqlite
+*.sqlite3

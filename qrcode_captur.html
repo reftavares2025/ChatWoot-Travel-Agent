@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Conectar WhatsApp - Captur Itapetininga</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
+        body { background: #e5ddd5; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .card { background: white; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); max-width: 520px; width: 100%; padding: 40px; text-align: center; }
+        .badge { background: #25d366; color: white; padding: 6px 16px; border-radius: 30px; font-size: 14px; font-weight: 700; display: inline-block; margin-bottom: 20px; letter-spacing: 0.5px; }
+        h1 { color: #075e54; font-size: 26px; margin-bottom: 12px; }
+        p.subtitle { color: #667781; font-size: 15px; line-height: 1.5; margin-bottom: 25px; }
+        
+        .qr-box { position: relative; width: 290px; height: 290px; margin: 0 auto 20px auto; border: 4px solid #128c7e; border-radius: 16px; padding: 10px; background: #fff; display: flex; align-items: center; justify-content: center; }
+        .qr-img { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
+        
+        .status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 20px; }
+        .status-badge.connecting { background: #e8f5e9; color: #2e7d32; }
+        .status-badge.connected { background: #25d366; color: white; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #25d366; animation: pulse 1.5s infinite; }
+        
+        .instructions { text-align: left; background: #f8f9fa; border-radius: 12px; padding: 18px 22px; font-size: 14px; color: #3b4a54; line-height: 1.6; margin-bottom: 25px; border-left: 4px solid #25d366; }
+        .instructions strong { color: #128c7e; }
+        
+        .btn-alt { display: inline-block; text-decoration: none; color: #128c7e; font-size: 13px; font-weight: 600; transition: all 0.2s; border: 1px solid #128c7e; padding: 8px 16px; border-radius: 8px; }
+        .btn-alt:hover { background: #128c7e; color: white; }
+        
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <span class="badge">CAPTUR ITAPETININGA</span>
+    <h1>Conectar WhatsApp</h1>
+    <p class="subtitle">Este QR Code é <strong>atualizado em tempo real</strong> e nunca expira.</p>
+
+    <div class="status-badge connecting" id="statusBox">
+        <span class="status-dot"></span>
+        <span id="statusText">Aguardando leitura da câmera...</span>
+    </div>
+
+    <div class="qr-box">
+        <img id="qrImage" class="qr-img" src="" alt="Carregando QR Code...">
+    </div>
+
+    <div class="instructions">
+        <strong>Como escanear no seu celular:</strong><br>
+        1. Abra o WhatsApp no celular que vai testar.<br>
+        2. Toque nos <strong>3 pontinhos</strong> (Android) ou <strong>Configurações</strong> (iPhone).<br>
+        3. Toque em <strong>Aparelhos Conectados</strong>.<br>
+        4. Toque em <strong>Conectar um Aparelho</strong> e aponte para o QR Code acima.
+    </div>
+
+    <div>
+        <a class="btn-alt" href="http://localhost:8080/manager" target="_blank">Abrir no Painel Evolution Manager</a>
+    </div>
+</div>
+
+<script>
+    const API_URL = "http://localhost:8080";
+    const API_KEY = "captur_secret_key_2026";
+    let isConnected = false;
+
+    async function atualizarQRCode() {
+        if (isConnected) return;
+
+        try {
+            // Verificar estado da conexão primeiro
+            const stateRes = await fetch(`${API_URL}/instance/connectionState/captur`, {
+                headers: { "apikey": API_KEY }
+            });
+            const stateData = await stateRes.json();
+            
+            if (stateData.instance && stateData.instance.state === "open") {
+                isConnected = true;
+                document.getElementById("statusBox").className = "status-badge connected";
+                document.getElementById("statusText").innerText = "✓ WhatsApp Conectado com Sucesso!";
+                document.getElementById("qrImage").style.display = "none";
+                return;
+            }
+
+            // Buscar QR Code atualizado
+            const res = await fetch(`${API_URL}/instance/connect/captur`, {
+                headers: { "apikey": API_KEY }
+            });
+            const data = await res.json();
+            
+            if (data.base64) {
+                document.getElementById("qrImage").src = data.base64;
+                document.getElementById("qrImage").style.display = "block";
+            }
+        } catch (err) {
+            console.error("Erro ao atualizar QR Code:", err);
+            document.getElementById("statusText").innerText = "Sincronizando com a API...";
+        }
+    }
+
+    // Executa imediatamente e depois a cada 4 segundos
+    atualizarQRCode();
+    setInterval(atualizarQRCode, 4000);
+</script>
+
+</body>
+</html>

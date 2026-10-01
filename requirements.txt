@@ -1,0 +1,14 @@
+fastapi>=0.103.0
+uvicorn[standard]>=0.23.2
+sqlalchemy>=2.0.20
+asyncpg>=0.28.0
+httpx>=0.25.0
+pydantic>=2.3.0
+pydantic-settings>=2.0.3
+redis>=5.0.0
+
+# Venda self-service de passagem aérea (src/services/flight_agent.py)
+langgraph>=0.2.0
+langchain-openai>=0.2.0
+psycopg[binary]>=3.2.0
+langgraph-checkpoint-postgres>=2.0.0
